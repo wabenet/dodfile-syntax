@@ -1,0 +1,14 @@
+backdrops:
+  make:
+    image:
+      steps: |
+        FROM golang:1.14-alpine
+        ENV CGO_ENABLED=0
+        RUN apk add -U curl make
+        RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.27.0
+    volumes:
+      - "{{ projectRoot }}:/build"
+      - "{{ projectRoot }}/.cache:/go/pkg/mod"
+    working_dir: /build
+    script: exec make "$@"
+    command: all
