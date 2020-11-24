@@ -1,6 +1,6 @@
 module github.com/dodo-cli/dodfile-syntax
 
-go 1.14
+go 1.15
 
 replace (
 	github.com/containerd/containerd => github.com/containerd/containerd v1.3.1-0.20200512144102-f13ba8f2f2fd

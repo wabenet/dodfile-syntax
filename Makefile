@@ -15,3 +15,7 @@ lint:
 .PHONY: build
 build:
 	go build -o dodfile-syntax .
+
+.PHONY: image
+image:
+	docker build -t dodo-cli/dodfile-syntax .
