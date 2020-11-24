@@ -10,24 +10,8 @@ import (
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/moby/buildkit/frontend/gateway/client"
-	"github.com/moby/buildkit/util/system"
-	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	yaml "gopkg.in/yaml.v2"
 )
-
-func image() dockerfile2llb.Image {
-	img := dockerfile2llb.Image{
-		Image: specs.Image{
-			Architecture: "amd64",
-			OS:           "linux",
-		},
-	}
-	img.RootFS.Type = "layers"
-	img.Config.Env = []string{"PATH=" + system.DefaultPathEnv}
-	img.Config.Cmd = []string{"/bin/bash"}
-
-	return img
-}
 
 func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 	img, err := GetConfig(ctx, c)
@@ -54,7 +38,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, err
 	}
 
-	config, err := json.Marshal(image())
+	config, err := json.Marshal(img.GetDockerMetadata())
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal image config: %w", err)
 	}

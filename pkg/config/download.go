@@ -13,7 +13,7 @@ type Download struct {
 }
 
 func Fetch(base llb.State, d *Download) llb.State {
-	s := Install(llb.Image(baseImage), &Packages{Name: []string{"curl"}})
+	s := Install(llb.Image(defaultBaseImage), &Packages{Name: []string{"curl", "ca-certificates"}})
 
 	if isTgz(d.Source) {
 		s = Sh(s, "curl -Lo tmp.tar.gz %s", d.Source)

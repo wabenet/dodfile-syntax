@@ -20,7 +20,7 @@ func Install(base llb.State, p *Packages) llb.State {
 	}
 
 	for _, url := range p.Gpg {
-		curl := Install(llb.Image(baseImage), &Packages{Name: []string{"curl"}})
+		curl := Install(llb.Image(defaultBaseImage), &Packages{Name: []string{"curl"}})
 		downloadSt := Sh(curl, "curl -Lo /key.gpg %s", url)
 		base = Copy(downloadSt, "/key.gpg", base, "/key.gpg")
 		base = Sh(base, "apt-key add /key.gpg && rm /key.gpg")

@@ -8,12 +8,18 @@ import (
 )
 
 type CopyFrom struct {
-	Dockerfile  string `yaml:"dockerfile"`
-	Source      string `yaml:"source"`
-	Destination string `yaml:"destination"`
+	Image      string            `yaml:"image"`
+	Dockerfile string            `yaml:"dockerfile"`
+	Path       string            `yaml:"path"`
+	Env        map[string]string `yaml:"env"`
 }
 
 func CopyFromDockerfile(base llb.State, cfg *CopyFrom) llb.State {
+	if len(cfg.Image) > 0 {
+		source := llb.Image(cfg.Image)
+		return Copy(source, cfg.Path, base, cfg.Path)
+	}
+
 	// TODO: error handling here. convert options?
 	source, _, _ := dockerfile2llb.Dockerfile2LLB(
 		context.Background(),
@@ -21,5 +27,5 @@ func CopyFromDockerfile(base llb.State, cfg *CopyFrom) llb.State {
 		dockerfile2llb.ConvertOpt{},
 	)
 
-	return Copy(*source, cfg.Source, base, cfg.Destination)
+	return Copy(*source, cfg.Path, base, cfg.Path)
 }

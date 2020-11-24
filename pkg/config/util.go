@@ -11,7 +11,7 @@ func Sh(s llb.State, cmd string, v ...interface{}) llb.State {
 }
 
 func Copy(src llb.State, srcPath string, dest llb.State, destPath string) llb.State {
-	cp := llb.Image(baseImage).Run(llb.Shlexf("cp -a /src%s /dest%s", srcPath, destPath))
+	cp := llb.Image(defaultBaseImage).Run(llb.Shlexf("cp -a /src%s /dest%s", srcPath, destPath))
 	cp.AddMount("/src", src, llb.Readonly)
 
 	return cp.AddMount("/dest", dest)
