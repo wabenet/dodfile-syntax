@@ -9,12 +9,13 @@ const (
 )
 
 type Image struct {
-	BaseImage string      `yaml:"base_image"`
-	User      string      `yaml:"user"`
-	Paths     []string    `yaml:"paths"`
-	Packages  *Packages   `yaml:"packages"`
-	Download  []*Download `yaml:"download"`
-	From      []*CopyFrom `yaml:"from"`
+	BaseImage string            `yaml:"base_image"`
+	User      *User             `yaml:"user"`
+	Env       map[string]string `yaml:"env"`
+	Paths     []string          `yaml:"paths"`
+	Packages  *Packages         `yaml:"packages"`
+	Download  []*Download       `yaml:"download"`
+	From      []*CopyFrom       `yaml:"from"`
 }
 
 func (img *Image) base() llb.State {
@@ -28,6 +29,10 @@ func (img *Image) base() llb.State {
 
 func (img *Image) Build() llb.State {
 	s := img.base()
+
+	if img.User != nil {
+		s = SetupUser(s, img.User)
+	}
 
 	if img.Packages != nil {
 		s = Install(s, img.Packages)
