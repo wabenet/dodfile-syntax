@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/dodo-cli/dodfile-syntax/pkg/config"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
@@ -19,7 +18,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, fmt.Errorf("getting config: %w", err)
 	}
 
-	st := img.Build()
+	st, metadata := img.Build()
 
 	def, err := st.Marshal()
 	if err != nil {
@@ -38,7 +37,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, err
 	}
 
-	config, err := json.Marshal(img.GetDockerMetadata())
+	config, err := json.Marshal(metadata)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal image config: %w", err)
 	}
@@ -49,7 +48,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 	return res, nil
 }
 
-func GetConfig(ctx context.Context, c client.Client) (*config.Image, error) {
+func GetConfig(ctx context.Context, c client.Client) (*Image, error) {
 	opts := c.BuildOpts().Opts
 
 	filename := opts["filename"]
@@ -89,7 +88,7 @@ func GetConfig(ctx context.Context, c client.Client) (*config.Image, error) {
 		return nil, fmt.Errorf("failed to read dockerfile: %w", err)
 	}
 
-	cfg := &config.Image{}
+	cfg := &Image{}
 	if err := yaml.UnmarshalStrict(dtDockerfile, cfg); err != nil {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
