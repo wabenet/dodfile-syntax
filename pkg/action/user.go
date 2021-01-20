@@ -2,7 +2,9 @@ package action
 
 import (
 	"fmt"
+	"strconv"
 
+	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
@@ -40,17 +42,19 @@ func (a *UserAction) Execute(base llb.State) llb.State {
 
 	a.setDefaults()
 
+	s := state.FromLLB(defaultBaseImage, base)
+
 	home := fmt.Sprintf("/home/%s", a.Name)
-	base = Sh(base, "addgroup --gid %d %s", a.GID, a.Name)
-	base = Sh(base, "adduser --uid %d --gid %d --home %s --shell %s --disabled-password %s", a.UID, a.GID, home, a.Shell, a.Name)
+	s.Exec("/usr/sbin/addgroup", "--gid", strconv.Itoa(a.GID), a.Name)
+	s.Exec("/usr/sbin/adduser", "--uid", strconv.Itoa(a.UID), "--gid", strconv.Itoa(a.GID), "--home", home, "--shell", a.Shell, "--disabled-password", a.Name)
 
 	if a.Dotfiles != "" {
-		source := llb.Local("context")
-		base = Copy(source, a.Dotfiles, base, home)
-		base = Sh(base, "chown -R %d:%d %s", a.UID, a.GID, home)
+		source := state.FromLLB(defaultBaseImage, llb.Local("context"))
+		s.Copy(source, a.Dotfiles, home)
+		s.Exec("/bin/chown", "-R", fmt.Sprintf("%d:%d", a.UID, a.GID), home)
 	}
 
-	return base
+	return s.Get()
 }
 
 func (a *UserAction) UpdateMetadata(metadata *dockerfile2llb.Image) {

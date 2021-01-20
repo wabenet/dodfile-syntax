@@ -3,6 +3,7 @@ package action
 import (
 	"context"
 
+	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
@@ -15,20 +16,25 @@ type CopyAction struct {
 }
 
 func (a *CopyAction) Execute(base llb.State) llb.State {
+	s := state.FromLLB(defaultBaseImage, base)
+
 	if len(a.Directory) > 0 {
-		source := llb.Local("context")
-		return Copy(source, a.Directory, base, a.Path)
+		source := state.FromLLB(defaultBaseImage, llb.Local("context"))
+		s.Copy(source, a.Directory, a.Path)
+
+		return s.Get()
 	}
 
 	if len(a.Image) > 0 {
-		source := llb.Image(a.Image)
-		return Copy(source, a.Path, base, a.Path)
+		source := state.From(a.Image)
+		s.Copy(source, a.Path, a.Path)
+
+		return s.Get()
 	}
 
-	buildContext := llb.Local("context")
-
 	// TODO: error handling here
-	source, _, _ := dockerfile2llb.Dockerfile2LLB(
+	buildContext := llb.Local("context")
+	dockerImg, _, _ := dockerfile2llb.Dockerfile2LLB(
 		context.Background(),
 		[]byte(a.Dockerfile),
 		dockerfile2llb.ConvertOpt{
@@ -36,7 +42,10 @@ func (a *CopyAction) Execute(base llb.State) llb.State {
 		},
 	)
 
-	return Copy(*source, a.Path, base, a.Path)
+        source := state.FromLLB(defaultBaseImage, *dockerImg)
+        s.Copy(source, a.Path, a.Path)
+
+	return s.Get()
 }
 
 func (*CopyAction) UpdateMetadata(_ *dockerfile2llb.Image) {

@@ -1,8 +1,7 @@
 package action
 
 import (
-	"strings"
-
+	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
@@ -14,25 +13,25 @@ type PackageAction struct {
 }
 
 func (a *PackageAction) Execute(base llb.State) llb.State {
-	base = Sh(base, "apt-get update && apt-get install apt-transport-https -y")
+	s := state.FromLLB(defaultBaseImage, base)
 
 	for _, repo := range a.Repo {
-		base = Sh(base, "echo \"%s\" >> /etc/apt/sources.list", repo)
+		s.Sh("echo \"%s\" >> /etc/apt/sources.list", repo)
 	}
 
 	for _, url := range a.Gpg {
-		curl := Sh(llb.Image(defaultBaseImage), "apt-get update && apt-get install -y --no-install-recommends --no-install -suggests apt-transport-https curl ca-certificates")
-		downloadSt := Sh(curl, "curl -Lo /key.gpg %s", url)
-		base = Copy(downloadSt, "/key.gpg", base, "/key.gpg")
-		base = Sh(base, "apt-key add /key.gpg && rm /key.gpg")
+		curl := state.From(defaultBaseImage)
+		curl.Install("apt-transport-https", "curl", "ca-certificates")
+		curl.Exec("/usr/bin/curl", "-Lo", "/key.gpg", url)
+		s.Copy(curl, "/key.gpg", "/key.gpg")
+		s.Sh("apt-key add /key.gpg && rm /key.gpg")
 	}
 
 	if len(a.Name) > 0 {
-		packages := strings.Join(a.Name, " ")
-		base = Sh(base, "apt-get update && apt-get install --no-install-recommends --no-install-suggests -y %s", packages)
+		s.Install(a.Name...)
 	}
 
-	return base
+	return s.Get()
 }
 
 func (*PackageAction) UpdateMetadata(_ *dockerfile2llb.Image) {

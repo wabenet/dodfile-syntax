@@ -3,6 +3,7 @@ package action
 import (
 	"path"
 
+	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
@@ -16,22 +17,31 @@ type DownloadAction struct {
 
 func (a *DownloadAction) Execute(base llb.State) llb.State {
 	targetFile := path.Base(a.Source)
-	s := Sh(llb.Image(defaultBaseImage), "apt-get update && apt-get install -y --no-install-recommends --no-install-suggests apt-transport-https curl ca-certificates")
 
-	s = Sh(s, "curl -Lo %s %s", targetFile, a.Source)
+	downloader := state.From(defaultBaseImage)
+	downloader.Install("apt-transport-https", "curl", "ca-certificates")
+
+	if a.Unpack != "" {
+		downloader.Install("tar", "unzip")
+	}
+
+	downloader.Exec("/usr/bin/curl", "-Lo", targetFile, a.Source)
 
 	if a.Sha256 != "" {
-		s = Sh(s, "echo \"%s  %s\" | sha256sum -c -", a.Sha256, targetFile)
+		downloader.Sh("echo \"%s  %s\" | sha256sum -c -", a.Sha256, targetFile)
 	}
 
 	if a.Unpack != "" {
-		s = Sh(s, "tar -zxf %s -C %s", targetFile, path.Dir(a.Destination))
+		downloader.Exec("/bin/tar", "-zxf", targetFile, "-C", path.Dir(a.Destination))
 		targetFile = path.Join(path.Dir(a.Destination), a.Unpack)
 	} else {
-		s = Sh(s, "chmod +x %s", targetFile)
+		downloader.Exec("/bin/chmod", "+x", targetFile)
 	}
 
-	return Copy(s, targetFile, base, a.Destination)
+	s := state.FromLLB(defaultBaseImage, base)
+	s.Copy(downloader, targetFile, a.Destination)
+
+	return s.Get()
 }
 
 func (*DownloadAction) UpdateMetadata(_ *dockerfile2llb.Image) {
