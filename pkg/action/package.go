@@ -15,6 +15,10 @@ type PackageAction struct {
 func (a *PackageAction) Execute(base llb.State) llb.State {
 	s := state.FromLLB(defaultBaseImage, base)
 
+	if len(a.Gpg) > 0 {
+		s.Install("gnupg")
+	}
+
 	for _, repo := range a.Repo {
 		s.Sh("echo \"%s\" >> /etc/apt/sources.list", repo)
 	}
