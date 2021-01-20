@@ -21,6 +21,7 @@ type Image struct {
 	Packages  *Packages         `yaml:"packages"`
 	Download  []*Download       `yaml:"download"`
 	From      []*CopyFrom       `yaml:"from"`
+	Run       []*Run            `yaml:"run"`
 }
 
 type User struct {
@@ -50,6 +51,10 @@ type CopyFrom struct {
 	Dockerfile string            `yaml:"dockerfile"`
 	Path       string            `yaml:"path"`
 	Env        map[string]string `yaml:"env"`
+}
+
+type Run struct {
+	Script string `yaml:"script"`
 }
 
 func (img *Image) base() llb.State {
@@ -137,6 +142,15 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 			Image:      c.Image,
 			Dockerfile: c.Dockerfile,
 			Path:       c.Path,
+		}
+
+		s = a.Execute(s)
+		a.UpdateMetadata(&metadata)
+	}
+
+	for _, r := range img.Run {
+		a := &action.ScriptAction{
+			Script: r.Script,
 		}
 
 		s = a.Execute(s)
