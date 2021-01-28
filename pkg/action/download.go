@@ -2,6 +2,7 @@ package action
 
 import (
 	"path"
+	"path/filepath"
 
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
@@ -32,7 +33,15 @@ func (a *DownloadAction) Execute(base llb.State) llb.State {
 	}
 
 	if a.Unpack != "" {
-		downloader.Exec("/bin/tar", "-zxf", targetFile, "-C", path.Dir(a.Destination))
+		switch filepath.Ext(targetFile) {
+		case ".tgz":
+			downloader.Exec("/bin/tar", "-zxf", targetFile, "-C", path.Dir(a.Destination))
+		case ".zip":
+			downloader.Exec("/usr/bin/unzip", targetFile, "-d", path.Dir(a.Destination))
+		default:
+			// TODO: should this really be the default?
+			downloader.Exec("/bin/tar", "-zxf", targetFile, "-C", path.Dir(a.Destination))
+		}
 		targetFile = path.Join(path.Dir(a.Destination), a.Unpack)
 	} else {
 		downloader.Exec("/bin/chmod", "+x", targetFile)
