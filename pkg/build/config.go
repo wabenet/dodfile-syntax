@@ -55,6 +55,8 @@ type CopyFrom struct {
 
 type Run struct {
 	Script string `yaml:"script"`
+	User   string `yaml:"user"`
+	Cwd    string `yaml:"cwd"`
 }
 
 func (img *Image) base() llb.State {
@@ -151,6 +153,8 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 	for _, r := range img.Run {
 		a := &action.ScriptAction{
 			Script: r.Script,
+			User:   r.User,
+			Cwd:    r.Cwd,
 		}
 
 		s = a.Execute(s)

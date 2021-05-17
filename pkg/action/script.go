@@ -8,14 +8,24 @@ import (
 
 type ScriptAction struct {
 	Script string
+	User   string
+	Cwd    string
 }
 
 func (a *ScriptAction) Execute(base llb.State) llb.State {
 	s := state.FromLLB(defaultBaseImage, base)
 
-        s.Sh(a.Script)
+	if len(a.User) > 0 {
+		s.User(a.User)
+	}
 
-        return s.Get()
+	if len(a.Cwd) > 0 {
+		s.Cwd(a.Cwd)
+	}
+
+	s.Sh(a.Script)
+
+	return s.Get()
 }
 
 func (*ScriptAction) UpdateMetadata(_ *dockerfile2llb.Image) {

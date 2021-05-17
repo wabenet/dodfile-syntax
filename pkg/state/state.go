@@ -34,6 +34,14 @@ func (s *State) Get() llb.State {
 	return s.current
 }
 
+func (s *State) User(u string) {
+	s.current = s.current.User(u)
+}
+
+func (s *State) Cwd(dir string) {
+	s.current = s.current.Dir(dir)
+}
+
 func (s *State) Exec(args ...string) {
 	s.current = s.current.Run(llb.Args(args)).Root()
 }
@@ -50,8 +58,8 @@ func (s *State) Install(pkgs ...string) {
 
 func (s *State) Copy(src *State, srcPath string, destPath string) {
 	execState := llb.Image(s.baseImage).Run(llb.Args([]string{"/bin/mkdir", "-p", path.Join("/dest", path.Dir(destPath))}))
-        s.current = execState.AddMount("/dest", s.current)
-       
+	s.current = execState.AddMount("/dest", s.current)
+
 	execState = s.current.Run(llb.Args([]string{"/bin/cp", "-a", "-T", path.Join("/src", srcPath), path.Join("/dest", destPath)}))
 	execState.AddMount("/src", src.current, llb.Readonly)
 	s.current = execState.AddMount("/dest", s.current)
