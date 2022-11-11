@@ -1,4 +1,4 @@
-package action
+package download
 
 import (
 	"path"
@@ -8,6 +8,8 @@ import (
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
+
+const defaultBaseImage = "debian"
 
 type DownloadAction struct {
 	Source      string

@@ -1,4 +1,4 @@
-package action
+package copy
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
+
+const defaultBaseImage = "debian"
 
 type CopyAction struct {
 	Directory  string
@@ -42,8 +44,8 @@ func (a *CopyAction) Execute(base llb.State) llb.State {
 		},
 	)
 
-        source := state.FromLLB(defaultBaseImage, *dockerImg)
-        s.Copy(source, a.Path, a.Path)
+	source := state.FromLLB(defaultBaseImage, *dockerImg)
+	s.Copy(source, a.Path, a.Path)
 
 	return s.Get()
 }

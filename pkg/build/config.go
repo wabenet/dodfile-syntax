@@ -3,7 +3,11 @@ package build
 import (
 	"fmt"
 
-	"github.com/dodo-cli/dodfile-syntax/pkg/action"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/copy"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/download"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/install"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/script"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/user"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/moby/buildkit/util/system"
@@ -103,7 +107,7 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 	metadata := img.metadata()
 
 	if img.User != nil {
-		a := &action.UserAction{
+		a := &user.UserAction{
 			Name:     img.User.Name,
 			UID:      img.User.UID,
 			GID:      img.User.GID,
@@ -116,7 +120,7 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 	}
 
 	if img.Packages != nil {
-		a := &action.PackageAction{
+		a := &install.PackageAction{
 			Name: img.Packages.Name,
 			Repo: img.Packages.Repo,
 			Gpg:  img.Packages.Gpg,
@@ -127,7 +131,7 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 	}
 
 	for _, d := range img.Download {
-		a := &action.DownloadAction{
+		a := &download.DownloadAction{
 			Source:      d.Source,
 			Sha256:      d.Sha256,
 			Unpack:      d.Unpack,
@@ -139,7 +143,7 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 	}
 
 	for _, c := range img.From {
-		a := &action.CopyAction{
+		a := &copy.CopyAction{
 			Directory:  c.Directory,
 			Image:      c.Image,
 			Dockerfile: c.Dockerfile,
@@ -151,7 +155,7 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 	}
 
 	for _, r := range img.Run {
-		a := &action.ScriptAction{
+		a := &script.ScriptAction{
 			Script: r.Script,
 			User:   r.User,
 			Cwd:    r.Cwd,

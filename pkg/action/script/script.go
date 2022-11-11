@@ -1,10 +1,12 @@
-package action
+package script
 
 import (
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
+
+const defaultBaseImage = "debian"
 
 type ScriptAction struct {
 	Script string
