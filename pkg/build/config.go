@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/copy"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/dotfiles"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/download"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/install"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/script"
@@ -159,6 +160,19 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 			Script: r.Script,
 			User:   r.User,
 			Cwd:    r.Cwd,
+		}
+
+		s = a.Execute(s)
+		a.UpdateMetadata(&metadata)
+	}
+
+	if img.User != nil {
+		a := &dotfiles.Action{
+			Name:     img.User.Name,
+			UID:      img.User.UID,
+			GID:      img.User.GID,
+			Shell:    img.User.Shell,
+			Dotfiles: img.User.Dotfiles,
 		}
 
 		s = a.Execute(s)
