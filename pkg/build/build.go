@@ -20,7 +20,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 
 	st, metadata := img.Build()
 
-	def, err := st.Marshal()
+	def, err := st.Marshal(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal local source: %w", err)
 	}
@@ -68,7 +68,7 @@ func GetConfig(ctx context.Context, c client.Client) (*Image, error) {
 		dockerfile2llb.WithInternalName(name),
 	)
 
-	def, err := src.Marshal()
+	def, err := src.Marshal(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal local source: %w", err)
 	}

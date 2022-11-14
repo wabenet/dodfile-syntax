@@ -81,7 +81,7 @@ func (img *Image) metadata() dockerfile2llb.Image {
 		},
 	}
 
-	env := map[string]string{"PATH": system.DefaultPathEnv}
+	env := map[string]string{"PATH": system.DefaultPathEnv("linux")}
 
 	for key, value := range img.Env {
 		switch key {

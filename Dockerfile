@@ -1,6 +1,6 @@
-FROM golang:1.15-alpine AS build
+FROM golang:1.18 AS build
 
-RUN apk add -U make
+RUN apt-get update && apt-get install -y make
 
 COPY . /build
 WORKDIR /build

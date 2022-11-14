@@ -4,8 +4,9 @@ all: clean build
 clean:
 	rm -f dodfile-syntax
 
-.PHONY: tidy
-tidy:
+.PHONY: update
+update:
+	go list -f '{{if not (or .Main .Indirect)}}{{.Path}}{{end}}' -m all | xargs --no-run-if-empty go get
 	go mod tidy
 
 .PHONY: lint

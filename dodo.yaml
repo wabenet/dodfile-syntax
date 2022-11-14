@@ -2,14 +2,12 @@ backdrops:
   make:
     image:
       steps: |
-        FROM golang:1.15-alpine
-        ENV CGO_ENABLED=0
-        RUN apk add -U curl make
-        RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.27.0
+        FROM golang:1.18
+        RUN apt-get update && apt-get install -y git bash curl tree make
+        RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.50.0
         COPY --from=docker:19.03.1 /usr/local/bin/docker /bin/docker
     volumes:
       - "{{ projectRoot }}:/build"
       - "{{ projectRoot }}/.cache:/go/pkg/mod"
     working_dir: /build
     script: exec make "$@"
-    command: all

@@ -36,7 +36,7 @@ func (a *CopyAction) Execute(base llb.State) llb.State {
 
 	// TODO: error handling here
 	buildContext := llb.Local("context")
-	dockerImg, _, _ := dockerfile2llb.Dockerfile2LLB(
+	dockerImg, _, _, _ := dockerfile2llb.Dockerfile2LLB(
 		context.Background(),
 		[]byte(a.Dockerfile),
 		dockerfile2llb.ConvertOpt{
