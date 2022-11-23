@@ -5,7 +5,6 @@ import (
 
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
 const (
@@ -53,7 +52,4 @@ func (a *Action) Execute(base llb.State) llb.State {
 		s.Exec("/bin/chown", "-R", fmt.Sprintf("%d:%d", a.UID, a.GID), home)
 	}
 	return s.Get()
-}
-
-func (*Action) UpdateMetadata(_ *dockerfile2llb.Image) {
 }

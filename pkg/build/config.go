@@ -117,7 +117,12 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		}
 
 		s = a.Execute(s)
-		a.UpdateMetadata(&metadata)
+
+		metadata.Config.User = img.User.Name
+
+		if a.Shell != "" {
+			metadata.Config.Cmd = []string{img.User.Shell}
+		}
 	}
 
 	if img.Packages != nil {
@@ -128,7 +133,6 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		}
 
 		s = a.Execute(s)
-		a.UpdateMetadata(&metadata)
 	}
 
 	for _, d := range img.Download {
@@ -140,7 +144,6 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		}
 
 		s = a.Execute(s)
-		a.UpdateMetadata(&metadata)
 	}
 
 	for _, c := range img.From {
@@ -152,7 +155,6 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		}
 
 		s = a.Execute(s)
-		a.UpdateMetadata(&metadata)
 	}
 
 	for _, r := range img.Run {
@@ -163,7 +165,6 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		}
 
 		s = a.Execute(s)
-		a.UpdateMetadata(&metadata)
 	}
 
 	if img.User != nil {
@@ -176,7 +177,6 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		}
 
 		s = a.Execute(s)
-		a.UpdateMetadata(&metadata)
 	}
 
 	return s, metadata

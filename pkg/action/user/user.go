@@ -6,7 +6,6 @@ import (
 
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
 const (
@@ -57,12 +56,4 @@ func (a *UserAction) Execute(base llb.State) llb.State {
 	s.Exec("/usr/sbin/adduser", "--uid", strconv.Itoa(a.UID), "--gid", strconv.Itoa(a.GID), "--home", home, "--shell", a.Shell, "--disabled-password", a.Name)
 
 	return s.Get()
-}
-
-func (a *UserAction) UpdateMetadata(metadata *dockerfile2llb.Image) {
-	metadata.Config.User = a.Name
-
-	if a.Shell != "" {
-		metadata.Config.Cmd = []string{a.Shell}
-	}
 }

@@ -49,6 +49,3 @@ func (a *CopyAction) Execute(base llb.State) llb.State {
 
 	return s.Get()
 }
-
-func (*CopyAction) UpdateMetadata(_ *dockerfile2llb.Image) {
-}

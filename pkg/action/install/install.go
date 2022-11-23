@@ -3,7 +3,6 @@ package install
 import (
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
 const defaultBaseImage = "debian"
@@ -38,7 +37,4 @@ func (a *PackageAction) Execute(base llb.State) llb.State {
 	}
 
 	return s.Get()
-}
-
-func (*PackageAction) UpdateMetadata(_ *dockerfile2llb.Image) {
 }
