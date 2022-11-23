@@ -100,40 +100,19 @@ func (img *Image) metadata() dockerfile2llb.Image {
 	metadata.RootFS.Type = "layers"
 	metadata.Config.Env = envs
 
+	if img.User != nil {
+		metadata.Config.User = img.User.Name
+
+		if img.User.Shell != "" {
+			metadata.Config.Cmd = []string{img.User.Shell}
+		}
+	}
+
 	return metadata
 }
 
 func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 	s := img.base()
-	metadata := img.metadata()
-
-	if img.User != nil {
-		a := &user.UserAction{
-			Name:     img.User.Name,
-			UID:      img.User.UID,
-			GID:      img.User.GID,
-			Shell:    img.User.Shell,
-			Dotfiles: img.User.Dotfiles,
-		}
-
-		s = a.Execute(s)
-
-		metadata.Config.User = img.User.Name
-
-		if a.Shell != "" {
-			metadata.Config.Cmd = []string{img.User.Shell}
-		}
-	}
-
-	if img.Packages != nil {
-		a := &install.PackageAction{
-			Name: img.Packages.Name,
-			Repo: img.Packages.Repo,
-			Gpg:  img.Packages.Gpg,
-		}
-
-		s = a.Execute(s)
-	}
 
 	for _, d := range img.Download {
 		a := &download.DownloadAction{
@@ -157,11 +136,23 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		s = a.Execute(s)
 	}
 
-	for _, r := range img.Run {
-		a := &script.ScriptAction{
-			Script: r.Script,
-			User:   r.User,
-			Cwd:    r.Cwd,
+	if img.Packages != nil {
+		a := &install.PackageAction{
+			Name: img.Packages.Name,
+			Repo: img.Packages.Repo,
+			Gpg:  img.Packages.Gpg,
+		}
+
+		s = a.Execute(s)
+	}
+
+	if img.User != nil {
+		a := &user.UserAction{
+			Name:     img.User.Name,
+			UID:      img.User.UID,
+			GID:      img.User.GID,
+			Shell:    img.User.Shell,
+			Dotfiles: img.User.Dotfiles,
 		}
 
 		s = a.Execute(s)
@@ -179,5 +170,15 @@ func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
 		s = a.Execute(s)
 	}
 
-	return s, metadata
+	for _, r := range img.Run {
+		a := &script.ScriptAction{
+			Script: r.Script,
+			User:   r.User,
+			Cwd:    r.Cwd,
+		}
+
+		s = a.Execute(s)
+	}
+
+	return s, img.metadata()
 }
