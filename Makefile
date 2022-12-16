@@ -23,4 +23,4 @@ build:
 
 .PHONY: image
 image:
-	docker build -t dodo-cli/dodfile-syntax .
+	docker build -t wabenet/dodfile-syntax .

@@ -3,16 +3,16 @@ package action
 import (
 	"errors"
 
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/base"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/copy"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/download"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/env"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/install"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/script"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/user"
 	"github.com/mitchellh/mapstructure"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	"github.com/wabenet/dodfile-syntax/pkg/action/base"
+	"github.com/wabenet/dodfile-syntax/pkg/action/copy"
+	"github.com/wabenet/dodfile-syntax/pkg/action/download"
+	"github.com/wabenet/dodfile-syntax/pkg/action/env"
+	"github.com/wabenet/dodfile-syntax/pkg/action/install"
+	"github.com/wabenet/dodfile-syntax/pkg/action/script"
+	"github.com/wabenet/dodfile-syntax/pkg/action/user"
 )
 
 type Action interface {

@@ -1,4 +1,4 @@
-module github.com/dodo-cli/dodfile-syntax
+module github.com/wabenet/dodfile-syntax
 
 go 1.18
 

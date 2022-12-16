@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dodo-cli/dodfile-syntax/pkg/build"
 	"github.com/moby/buildkit/frontend/gateway/grpcclient"
 	"github.com/moby/buildkit/util/appcontext"
+	"github.com/wabenet/dodfile-syntax/pkg/build"
 )
 
 func main() {

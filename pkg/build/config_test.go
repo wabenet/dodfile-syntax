@@ -4,15 +4,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/base"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/copy"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/download"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/env"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/install"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/script"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/user"
-	"github.com/dodo-cli/dodfile-syntax/pkg/build"
 	"github.com/stretchr/testify/assert"
+	"github.com/wabenet/dodfile-syntax/pkg/action/base"
+	"github.com/wabenet/dodfile-syntax/pkg/action/copy"
+	"github.com/wabenet/dodfile-syntax/pkg/action/download"
+	"github.com/wabenet/dodfile-syntax/pkg/action/env"
+	"github.com/wabenet/dodfile-syntax/pkg/action/install"
+	"github.com/wabenet/dodfile-syntax/pkg/action/script"
+	"github.com/wabenet/dodfile-syntax/pkg/action/user"
+	"github.com/wabenet/dodfile-syntax/pkg/build"
 )
 
 func TestParseConfig(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	"github.com/wabenet/dodfile-syntax/pkg/state"
 )
 
 const (
