@@ -3,182 +3,57 @@ package build
 import (
 	"fmt"
 
+	"github.com/dodo-cli/dodfile-syntax/pkg/action"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/base"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/copy"
-	"github.com/dodo-cli/dodfile-syntax/pkg/action/dotfiles"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/download"
+	"github.com/dodo-cli/dodfile-syntax/pkg/action/env"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/install"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/script"
 	"github.com/dodo-cli/dodfile-syntax/pkg/action/user"
-	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
-	"github.com/moby/buildkit/util/system"
-	specs "github.com/opencontainers/image-spec/specs-go/v1"
+	yaml "gopkg.in/yaml.v2"
 )
 
-const (
-	defaultBaseImage = "debian"
-)
+type Image []action.Action
 
-type Image struct {
-	BaseImage string            `yaml:"base_image"`
-	User      *User             `yaml:"user"`
-	Env       map[string]string `yaml:"env"`
-	Packages  *Packages         `yaml:"packages"`
-	Download  []*Download       `yaml:"download"`
-	From      []*CopyFrom       `yaml:"from"`
-	Run       []*Run            `yaml:"run"`
-}
-
-type User struct {
-	Name     string `yaml:"name"`
-	UID      int    `yaml:"uid"`
-	GID      int    `yaml:"gid"`
-	Shell    string `yaml:"shell"`
-	Dotfiles string `yaml:"dotfiles"`
-}
-
-type Packages struct {
-	Name []string `yaml:"name"`
-	Repo []string `yaml:"repo"`
-	Gpg  []string `yaml:"gpg"`
-}
-
-type Download struct {
-	Source      string `yaml:"source"`
-	Sha256      string `yaml:"sha256"`
-	Unpack      string `yaml:"unpack"`
-	Destination string `yaml:"destination"`
-}
-
-type CopyFrom struct {
-	Directory  string            `yaml:"directory"`
-	Image      string            `yaml:"image"`
-	Dockerfile string            `yaml:"dockerfile"`
-	Path       string            `yaml:"path"`
-	Env        map[string]string `yaml:"env"`
-}
-
-type Run struct {
-	Script string `yaml:"script"`
-	User   string `yaml:"user"`
-	Cwd    string `yaml:"cwd"`
-}
-
-func (img *Image) base() llb.State {
-	baseImage := img.BaseImage
-	if len(baseImage) == 0 {
-		baseImage = defaultBaseImage
+func ParseConfig(input []byte) (Image, error) {
+	actionsByType := map[string][]action.Action{
+		base.Type:     {},
+		copy.Type:     {},
+		download.Type: {},
+		env.Type:      {},
+		install.Type:  {},
+		script.Type:   {},
+		user.Type:     {},
 	}
 
-	return llb.Image(baseImage)
-}
-
-func (img *Image) metadata() dockerfile2llb.Image {
-	metadata := dockerfile2llb.Image{
-		Image: specs.Image{
-			Architecture: "amd64",
-			OS:           "linux",
-		},
+	var cfg map[string]interface{}
+	if err := yaml.Unmarshal(input, &cfg); err != nil {
+		return nil, fmt.Errorf("invalid yaml syntax: %w", err)
 	}
 
-	env := map[string]string{"PATH": system.DefaultPathEnv("linux")}
-
-	for key, value := range img.Env {
-		switch key {
-		case "PATH":
-			env["PATH"] = fmt.Sprintf("%s:%s", env["PATH"], value)
-		default:
-			env[key] = value
-		}
-	}
-
-	envs := []string{}
-	for key, value := range env {
-		envs = append(envs, fmt.Sprintf("%s=%s", key, value))
-	}
-
-	metadata.RootFS.Type = "layers"
-	metadata.Config.Env = envs
-
-	if img.User != nil {
-		metadata.Config.User = img.User.Name
-
-		if img.User.Shell != "" {
-			metadata.Config.Cmd = []string{img.User.Shell}
-		}
-	}
-
-	return metadata
-}
-
-func (img *Image) Build() (llb.State, dockerfile2llb.Image) {
-	s := img.base()
-
-	for _, d := range img.Download {
-		a := &download.DownloadAction{
-			Source:      d.Source,
-			Sha256:      d.Sha256,
-			Unpack:      d.Unpack,
-			Destination: d.Destination,
+	for name, value := range cfg {
+		act, err := action.New(name, value)
+		if err != nil {
+			return nil, fmt.Errorf("could not decode action: %w", err)
 		}
 
-		s = a.Execute(s)
+		acts := actionsByType[act.Type()]
+		acts = append(acts, act)
+		actionsByType[act.Type()] = acts
 	}
 
-	for _, c := range img.From {
-		a := &copy.CopyAction{
-			Directory:  c.Directory,
-			Image:      c.Image,
-			Dockerfile: c.Dockerfile,
-			Path:       c.Path,
-		}
+	// TODO: implement something smarter to put the actions in the correct order
+	// This list is currently hardcoded, so we have the exact same behavior
+	// as before
+	sorted := []action.Action{}
+	sorted = append(sorted, actionsByType[base.Type]...)
+	sorted = append(sorted, actionsByType[env.Type]...)
+	sorted = append(sorted, actionsByType[download.Type]...)
+	sorted = append(sorted, actionsByType[copy.Type]...)
+	sorted = append(sorted, actionsByType[install.Type]...)
+	sorted = append(sorted, actionsByType[user.Type]...)
+	sorted = append(sorted, actionsByType[script.Type]...)
 
-		s = a.Execute(s)
-	}
-
-	if img.Packages != nil {
-		a := &install.PackageAction{
-			Name: img.Packages.Name,
-			Repo: img.Packages.Repo,
-			Gpg:  img.Packages.Gpg,
-		}
-
-		s = a.Execute(s)
-	}
-
-	if img.User != nil {
-		a := &user.UserAction{
-			Name:     img.User.Name,
-			UID:      img.User.UID,
-			GID:      img.User.GID,
-			Shell:    img.User.Shell,
-			Dotfiles: img.User.Dotfiles,
-		}
-
-		s = a.Execute(s)
-	}
-
-	if img.User != nil {
-		a := &dotfiles.Action{
-			Name:     img.User.Name,
-			UID:      img.User.UID,
-			GID:      img.User.GID,
-			Shell:    img.User.Shell,
-			Dotfiles: img.User.Dotfiles,
-		}
-
-		s = a.Execute(s)
-	}
-
-	for _, r := range img.Run {
-		a := &script.ScriptAction{
-			Script: r.Script,
-			User:   r.User,
-			Cwd:    r.Cwd,
-		}
-
-		s = a.Execute(s)
-	}
-
-	return s, img.metadata()
+	return sorted, nil
 }

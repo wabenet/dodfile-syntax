@@ -1,0 +1,28 @@
+base_image: debian
+
+user:
+  name: dodo
+  dotfiles: path/to/files
+
+env:
+  PATH: /usr/local/bin:$PATH
+
+packages:
+  name:
+    - test
+  repo:
+    - "deb [arch=amd64] https://repo.example.com/ buster main"
+  gpg:
+    - "https://repo.example.com/keys/test.asc"
+
+download:
+  - source: https://files.example.com/test.zip
+    unpack: test
+    destination: /bin/test
+
+from:
+  - image: test
+    path: /some/file
+
+run:
+  - script: echo Hello World

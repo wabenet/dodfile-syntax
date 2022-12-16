@@ -9,7 +9,12 @@ import (
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/moby/buildkit/frontend/gateway/client"
-	yaml "gopkg.in/yaml.v2"
+	"github.com/moby/buildkit/util/system"
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
+)
+
+const (
+	defaultBaseImage = "debian"
 )
 
 func Build(ctx context.Context, c client.Client) (*client.Result, error) {
@@ -18,9 +23,23 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, fmt.Errorf("getting config: %w", err)
 	}
 
-	st, metadata := img.Build()
+	st := llb.Image(defaultBaseImage)
 
-	def, err := st.Marshal(context.Background())
+	metadata := dockerfile2llb.Image{}
+	metadata.Image = specs.Image{Architecture: "amd64", OS: "linux"}
+	metadata.RootFS.Type = "layers"
+	metadata.Config.Env = []string{fmt.Sprintf("PATH=%s", system.DefaultPathEnv)}
+
+	for _, a := range img {
+		st, err = a.Execute(st)
+		if err != nil {
+			return nil, err
+		}
+
+		a.UpdateImage(metadata)
+	}
+
+	def, err := st.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal local source: %w", err)
 	}
@@ -48,7 +67,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 	return res, nil
 }
 
-func GetConfig(ctx context.Context, c client.Client) (*Image, error) {
+func GetConfig(ctx context.Context, c client.Client) (Image, error) {
 	opts := c.BuildOpts().Opts
 
 	filename := opts["filename"]
@@ -68,7 +87,7 @@ func GetConfig(ctx context.Context, c client.Client) (*Image, error) {
 		dockerfile2llb.WithInternalName(name),
 	)
 
-	def, err := src.Marshal(context.Background())
+	def, err := src.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal local source: %w", err)
 	}
@@ -88,10 +107,5 @@ func GetConfig(ctx context.Context, c client.Client) (*Image, error) {
 		return nil, fmt.Errorf("failed to read dockerfile: %w", err)
 	}
 
-	cfg := &Image{}
-	if err := yaml.UnmarshalStrict(dtDockerfile, cfg); err != nil {
-		return nil, fmt.Errorf("unmarshal config: %w", err)
-	}
-
-	return cfg, nil
+	return ParseConfig(dtDockerfile)
 }

@@ -6,9 +6,12 @@ import (
 
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
+	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
 const (
+	Type = "user"
+
 	defaultBaseImage = "debian"
 	defaultUser      = "user"
 	defaultUID       = 1000
@@ -16,15 +19,19 @@ const (
 	superUser        = "root"
 )
 
-type UserAction struct {
-	Name     string
-	UID      int
-	GID      int
-	Shell    string
-	Dotfiles string
+type Action struct {
+	Name     string `mapstructure:"name"`
+	UID      int    `mapstructure:"uid"`
+	GID      int    `mapstructure:"gid"`
+	Shell    string `mapstructure:"shell"`
+	Dotfiles string `mapstructure:"dotfiles"`
 }
 
-func (a *UserAction) setDefaults() {
+func (a *Action) Type() string {
+	return Type
+}
+
+func (a *Action) setDefaults() {
 	if a.Name == "" {
 		a.Name = defaultUser
 	}
@@ -42,9 +49,9 @@ func (a *UserAction) setDefaults() {
 	}
 }
 
-func (a *UserAction) Execute(base llb.State) llb.State {
+func (a *Action) Execute(base llb.State) (llb.State, error) {
 	if a.Name == superUser {
-		return base
+		return base, nil
 	}
 
 	a.setDefaults()
@@ -55,5 +62,19 @@ func (a *UserAction) Execute(base llb.State) llb.State {
 	s.Exec("/usr/sbin/addgroup", "--gid", strconv.Itoa(a.GID), a.Name)
 	s.Exec("/usr/sbin/adduser", "--uid", strconv.Itoa(a.UID), "--gid", strconv.Itoa(a.GID), "--home", home, "--shell", a.Shell, "--disabled-password", a.Name)
 
-	return s.Get()
+	if a.Dotfiles != "" {
+		source := state.FromLLB(defaultBaseImage, llb.Local("context"))
+		s.Copy(source, a.Dotfiles, home)
+		s.Exec("/bin/chown", "-R", fmt.Sprintf("%d:%d", a.UID, a.GID), home)
+	}
+
+	return s.Get(), nil
+}
+
+func (a *Action) UpdateImage(i dockerfile2llb.Image) {
+	i.Config.User = a.Name
+
+	if a.Shell != "" {
+		i.Config.Cmd = []string{a.Shell}
+	}
 }

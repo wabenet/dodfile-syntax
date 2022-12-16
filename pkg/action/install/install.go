@@ -3,17 +3,26 @@ package install
 import (
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
+	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
-const defaultBaseImage = "debian"
+const (
+	Type = "packages"
 
-type PackageAction struct {
-	Name []string
-	Repo []string
-	Gpg  []string
+	defaultBaseImage = "debian"
+)
+
+type Action struct {
+	Name []string `mapstructure:"name"`
+	Repo []string `mapstructure:"repo"`
+	Gpg  []string `mapstructure:"gpg"`
 }
 
-func (a *PackageAction) Execute(base llb.State) llb.State {
+func (a *Action) Type() string {
+	return Type
+}
+
+func (a *Action) Execute(base llb.State) (llb.State, error) {
 	s := state.FromLLB(defaultBaseImage, base)
 
 	if len(a.Gpg) > 0 {
@@ -36,5 +45,7 @@ func (a *PackageAction) Execute(base llb.State) llb.State {
 		s.Install(a.Name...)
 	}
 
-	return s.Get()
+	return s.Get(), nil
 }
+
+func (a *Action) UpdateImage(_ dockerfile2llb.Image) {}

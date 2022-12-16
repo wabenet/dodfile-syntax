@@ -6,18 +6,46 @@ import (
 
 	"github.com/dodo-cli/dodfile-syntax/pkg/state"
 	"github.com/moby/buildkit/client/llb"
+	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
-const defaultBaseImage = "debian"
+const (
+	Type = "download"
 
-type DownloadAction struct {
-	Source      string
-	Sha256      string
-	Unpack      string
-	Destination string
+	defaultBaseImage = "debian"
+)
+
+type Action struct {
+	Config []ActionConfig `mapstructure:"config"`
 }
 
-func (a *DownloadAction) Execute(base llb.State) llb.State {
+type ActionConfig struct {
+	Source      string `mapstructure:"source"`
+	Sha256      string `mapstructure:"sha256"`
+	Unpack      string `mapstructure:"unpack"`
+	Destination string `mapstructure:"destination"`
+}
+
+func (a *Action) Type() string {
+	return Type
+}
+
+func (a *Action) Execute(base llb.State) (llb.State, error) {
+	var err error
+
+	s := base
+
+	for _, ac := range a.Config {
+		s, err = ac.Execute(s)
+		if err != nil {
+			return s, err
+		}
+	}
+
+	return s, nil
+}
+
+func (a *ActionConfig) Execute(base llb.State) (llb.State, error) {
 	targetFile := path.Base(a.Source)
 
 	downloader := state.From(defaultBaseImage)
@@ -51,5 +79,7 @@ func (a *DownloadAction) Execute(base llb.State) llb.State {
 	s := state.FromLLB(defaultBaseImage, base)
 	s.Copy(downloader, targetFile, a.Destination)
 
-	return s.Get()
+	return s.Get(), nil
 }
+
+func (a Action) UpdateImage(_ dockerfile2llb.Image) {}

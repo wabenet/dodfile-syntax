@@ -13,6 +13,10 @@ update:
 lint:
 	golangci-lint run --enable-all
 
+.PHONY: test
+test:
+	go test -cover -race ./...
+
 .PHONY: build
 build:
 	go build -o dodfile-syntax .
