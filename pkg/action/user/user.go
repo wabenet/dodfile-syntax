@@ -71,7 +71,7 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	return s.Get(), nil
 }
 
-func (a *Action) UpdateImage(i dockerfile2llb.Image) {
+func (a *Action) UpdateImage(i *dockerfile2llb.Image) {
 	i.Config.User = a.Name
 
 	if a.Shell != "" {

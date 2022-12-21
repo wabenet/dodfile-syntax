@@ -36,7 +36,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 			return nil, err
 		}
 
-		a.UpdateImage(metadata)
+		a.UpdateImage(&metadata)
 	}
 
 	def, err := st.Marshal()

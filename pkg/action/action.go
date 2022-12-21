@@ -18,7 +18,7 @@ import (
 type Action interface {
 	Type() string
 	Execute(llb.State) (llb.State, error)
-	UpdateImage(dockerfile2llb.Image)
+	UpdateImage(*dockerfile2llb.Image)
 }
 
 type actionConfig struct {

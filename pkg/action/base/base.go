@@ -15,8 +15,8 @@ func (a *Action) Type() string {
 	return Type
 }
 
-func (a *Action) Execute(base llb.State) (llb.State, error) {
+func (a *Action) Execute(_ llb.State) (llb.State, error) {
 	return llb.Image(a.Config), nil
 }
 
-func (a *Action) UpdateImage(i dockerfile2llb.Image) {}
+func (a *Action) UpdateImage(_ *dockerfile2llb.Image) {}

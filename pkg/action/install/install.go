@@ -48,4 +48,4 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	return s.Get(), nil
 }
 
-func (a *Action) UpdateImage(_ dockerfile2llb.Image) {}
+func (a *Action) UpdateImage(_ *dockerfile2llb.Image) {}

@@ -21,7 +21,7 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	return base, nil
 }
 
-func (a *Action) UpdateImage(i dockerfile2llb.Image) {
+func (a *Action) UpdateImage(i *dockerfile2llb.Image) {
 	env := map[string]string{}
 
 	for key, value := range a.Env {
