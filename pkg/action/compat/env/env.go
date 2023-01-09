@@ -7,10 +7,10 @@ import (
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
-const Type = "environment"
+const Type = "env"
 
 type Action struct {
-	Variables map[string]string `mapstructure:"variables"`
+	Env map[string]string `mapstructure:",remain"`
 }
 
 func (a *Action) Type() string {
@@ -24,7 +24,7 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 func (a *Action) UpdateImage(i *dockerfile2llb.Image) {
 	env := map[string]string{}
 
-	for key, value := range a.Variables {
+	for key, value := range a.Env {
 		switch key {
 		case "PATH":
 			env["PATH"] = fmt.Sprintf("%s:%s", env["PATH"], value)

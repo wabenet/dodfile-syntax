@@ -1,0 +1,35 @@
+actions:
+  base:
+    type: base
+    name: debian
+
+  dodo:
+    type: user
+    name: dodo
+    dotfiles: path/to/files
+
+  path:
+    type: environment
+    variables:
+      PATH: /usr/local/bin:$PATH
+
+  testpkg:
+    type: install
+    name: test
+    repo: "deb [arch=amd64] https://repo.example.com/ buster main"
+    gpg: "https://repo.example.com/keys/test.asc"
+
+  testzip:
+    type: fetch
+    source: https://files.example.com/test.zip
+    unpack: test
+    destination: /bin/test
+
+  copyfile:
+    type: copy
+    image: test
+    path: /some/file
+
+  echo:
+    type: script
+    script: echo Hello World

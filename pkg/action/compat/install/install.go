@@ -7,15 +7,15 @@ import (
 )
 
 const (
-	Type = "install"
+	Type = "packages"
 
 	defaultBaseImage = "debian"
 )
 
 type Action struct {
-	Name string `mapstructure:"name"`
-	Repo string `mapstructure:"repo"`
-	Gpg  string `mapstructure:"gpg"`
+	Name []string `mapstructure:"name"`
+	Repo []string `mapstructure:"repo"`
+	Gpg  []string `mapstructure:"gpg"`
 }
 
 func (a *Action) Type() string {
@@ -29,20 +29,20 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 		s.Install("gnupg")
 	}
 
-	if len(a.Repo) > 0 {
-		s.Sh("echo \"%s\" >> /etc/apt/sources.list", a.Repo)
+	for _, repo := range a.Repo {
+		s.Sh("echo \"%s\" >> /etc/apt/sources.list", repo)
 	}
 
-	if len(a.Gpg) > 0 {
+	for _, url := range a.Gpg {
 		curl := state.From(defaultBaseImage)
 		curl.Install("apt-transport-https", "curl", "ca-certificates")
-		curl.Exec("/usr/bin/curl", "-Lo", "/key.gpg", a.Gpg)
+		curl.Exec("/usr/bin/curl", "-Lo", "/key.gpg", url)
 		s.Copy(curl, "/key.gpg", "/key.gpg")
 		s.Sh("apt-key add /key.gpg && rm /key.gpg")
 	}
 
 	if len(a.Name) > 0 {
-		s.Install(a.Name)
+		s.Install(a.Name...)
 	}
 
 	return s.Get(), nil

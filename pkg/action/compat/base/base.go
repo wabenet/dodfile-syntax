@@ -5,10 +5,10 @@ import (
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 )
 
-const Type = "base"
+const Type = "base_image"
 
 type Action struct {
-	Name string `mapstructure:"name"`
+	Config string `mapstructure:"config"`
 }
 
 func (a *Action) Type() string {
@@ -16,7 +16,7 @@ func (a *Action) Type() string {
 }
 
 func (a *Action) Execute(_ llb.State) (llb.State, error) {
-	return llb.Image(a.Name), nil
+	return llb.Image(a.Config), nil
 }
 
 func (a *Action) UpdateImage(_ *dockerfile2llb.Image) {}
