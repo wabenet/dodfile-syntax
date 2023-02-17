@@ -1,6 +1,8 @@
 package install
 
 import (
+	"strings"
+
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/wabenet/dodfile-syntax/pkg/state"
@@ -42,7 +44,7 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	}
 
 	if len(a.Name) > 0 {
-		s.Install(a.Name)
+		s.Install(strings.Fields(a.Name)...)
 	}
 
 	return s.Get(), nil
