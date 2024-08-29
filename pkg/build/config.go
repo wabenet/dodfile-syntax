@@ -17,6 +17,7 @@ import (
 	"github.com/wabenet/dodfile-syntax/pkg/action/env"
 	"github.com/wabenet/dodfile-syntax/pkg/action/fetch"
 	"github.com/wabenet/dodfile-syntax/pkg/action/install"
+	"github.com/wabenet/dodfile-syntax/pkg/action/python"
 	"github.com/wabenet/dodfile-syntax/pkg/action/script"
 	"github.com/wabenet/dodfile-syntax/pkg/action/user"
 	yaml "gopkg.in/yaml.v2"
@@ -38,6 +39,7 @@ func ParseConfig(input []byte) (Image, error) {
 		env.Type:       {},
 		fetch.Type:     {},
 		install.Type:   {},
+		python.Type:    {},
 		script.Type:    {},
 		user.Type:      {},
 	}
@@ -66,6 +68,7 @@ func ParseConfig(input []byte) (Image, error) {
 	sorted = append(sorted, actionsByType[eget.Type]...)
 	sorted = append(sorted, actionsByType[ccopy.Type]...)
 	sorted = append(sorted, actionsByType[copy.Type]...)
+	sorted = append(sorted, actionsByType[python.Type]...)
 	sorted = append(sorted, actionsByType[cinstall.Type]...)
 	sorted = append(sorted, actionsByType[install.Type]...)
 	sorted = append(sorted, actionsByType[cscript.Type]...)

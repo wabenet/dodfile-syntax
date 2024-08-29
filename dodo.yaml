@@ -9,5 +9,6 @@ backdrops:
     volumes:
       - "{{ projectRoot }}:/build"
       - "{{ projectRoot }}/.cache:/go/pkg/mod"
+      - "/var/run/docker.sock:/var/run/docker.sock"
     working_dir: /build
     script: exec make "$@"

@@ -2,7 +2,6 @@ package state
 
 import (
 	"fmt"
-	"path"
 
 	"github.com/moby/buildkit/client/llb"
 )
@@ -48,42 +47,4 @@ func (s *State) Exec(args ...string) {
 
 func (s *State) Sh(cmd string, v ...interface{}) {
 	s.Exec("/bin/sh", "-c", fmt.Sprintf(cmd, v...))
-}
-
-func (s *State) Install(pkgs ...string) {
-	execState := s.current.Run(llb.Args(updateCmd()))
-	execState = execState.Run(llb.Args(append(installCmd(), pkgs...)))
-	s.current = execState.Root()
-}
-
-func (s *State) Copy(src *State, srcPath string, destPath string) {
-	execState := llb.Image(s.baseImage).Run(llb.Args([]string{"/bin/mkdir", "-p", path.Join("/dest", path.Dir(destPath))}))
-	s.current = execState.AddMount("/dest", s.current)
-
-	execState = s.current.Run(llb.Args([]string{"/bin/cp", "-a", "-T", path.Join("/src", srcPath), path.Join("/dest", destPath)}))
-	execState.AddMount("/src", src.current, llb.Readonly)
-	s.current = execState.AddMount("/dest", s.current)
-}
-
-func (s *State) CopyDir(src *State, srcPath string, destPath string) {
-	execState := llb.Image(s.baseImage).Run(llb.Args([]string{"/bin/mkdir", "-p", path.Join("/dest", path.Dir(destPath))}))
-	s.current = execState.AddMount("/dest", s.current)
-
-	execState = s.current.Run(llb.Args([]string{"/bin/cp", "-a", "-R", path.Join("/src", srcPath) + "/.", "-t", path.Join("/dest", destPath)}))
-	execState.AddMount("/src", src.current, llb.Readonly)
-	s.current = execState.AddMount("/dest", s.current)
-}
-
-func updateCmd() []string {
-	return []string{"/usr/bin/apt-get", "update"}
-}
-
-func installCmd() []string {
-	return []string{
-		"/usr/bin/apt-get",
-		"install",
-		"-y",
-		"--no-install-recommends",
-		"--no-install-suggests",
-	}
 }
