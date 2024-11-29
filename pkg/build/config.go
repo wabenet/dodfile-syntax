@@ -13,6 +13,7 @@ import (
 	cinstall "github.com/wabenet/dodfile-syntax/pkg/action/compat/install"
 	cscript "github.com/wabenet/dodfile-syntax/pkg/action/compat/script"
 	"github.com/wabenet/dodfile-syntax/pkg/action/copy"
+	"github.com/wabenet/dodfile-syntax/pkg/action/eget"
 	"github.com/wabenet/dodfile-syntax/pkg/action/env"
 	"github.com/wabenet/dodfile-syntax/pkg/action/fetch"
 	"github.com/wabenet/dodfile-syntax/pkg/action/install"
@@ -33,6 +34,7 @@ func ParseConfig(input []byte) (Image, error) {
 		cscript.Type:   {},
 		base.Type:      {},
 		copy.Type:      {},
+		eget.Type:      {},
 		env.Type:       {},
 		fetch.Type:     {},
 		install.Type:   {},
@@ -61,6 +63,7 @@ func ParseConfig(input []byte) (Image, error) {
 	sorted = append(sorted, actionsByType[user.Type]...)
 	sorted = append(sorted, actionsByType[cdownload.Type]...)
 	sorted = append(sorted, actionsByType[fetch.Type]...)
+	sorted = append(sorted, actionsByType[eget.Type]...)
 	sorted = append(sorted, actionsByType[ccopy.Type]...)
 	sorted = append(sorted, actionsByType[copy.Type]...)
 	sorted = append(sorted, actionsByType[cinstall.Type]...)

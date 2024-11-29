@@ -65,6 +65,15 @@ func (s *State) Copy(src *State, srcPath string, destPath string) {
 	s.current = execState.AddMount("/dest", s.current)
 }
 
+func (s *State) CopyDir(src *State, srcPath string, destPath string) {
+	execState := llb.Image(s.baseImage).Run(llb.Args([]string{"/bin/mkdir", "-p", path.Join("/dest", path.Dir(destPath))}))
+	s.current = execState.AddMount("/dest", s.current)
+
+	execState = s.current.Run(llb.Args([]string{"/bin/cp", "-a", "-R", path.Join("/src", srcPath) + "/.", "-t", path.Join("/dest", destPath)}))
+	execState.AddMount("/src", src.current, llb.Readonly)
+	s.current = execState.AddMount("/dest", s.current)
+}
+
 func updateCmd() []string {
 	return []string{"/usr/bin/apt-get", "update"}
 }

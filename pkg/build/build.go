@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
@@ -26,7 +27,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 	st := llb.Image(defaultBaseImage)
 
 	metadata := dockerfile2llb.Image{}
-	metadata.Image = specs.Image{Architecture: "amd64", OS: "linux"}
+	metadata.Image = specs.Image{Architecture: runtime.GOARCH, OS: "linux"}
 	metadata.RootFS.Type = "layers"
 	metadata.Config.Env = []string{fmt.Sprintf("PATH=%s", system.DefaultPathEnv)}
 

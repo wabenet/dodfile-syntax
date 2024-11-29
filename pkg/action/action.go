@@ -14,6 +14,7 @@ import (
 	cinstall "github.com/wabenet/dodfile-syntax/pkg/action/compat/install"
 	cscript "github.com/wabenet/dodfile-syntax/pkg/action/compat/script"
 	"github.com/wabenet/dodfile-syntax/pkg/action/copy"
+	"github.com/wabenet/dodfile-syntax/pkg/action/eget"
 	"github.com/wabenet/dodfile-syntax/pkg/action/env"
 	"github.com/wabenet/dodfile-syntax/pkg/action/fetch"
 	"github.com/wabenet/dodfile-syntax/pkg/action/install"
@@ -85,6 +86,8 @@ func getByType(t string) (Action, error) {
 		return &base.Action{}, nil
 	case copy.Type:
 		return &copy.Action{}, nil
+	case eget.Type:
+		return &eget.Action{}, nil
 	case env.Type:
 		return &env.Action{}, nil
 	case fetch.Type:
