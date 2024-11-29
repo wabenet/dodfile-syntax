@@ -1,6 +1,6 @@
 module github.com/wabenet/dodfile-syntax
 
-go 1.18
+go 1.23
 
 replace github.com/docker/docker => github.com/docker/docker v17.12.0-ce-rc1.0.20200310163718-4634ce647cf2+incompatible
 
