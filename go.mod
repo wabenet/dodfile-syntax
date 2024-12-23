@@ -3,8 +3,8 @@ module github.com/wabenet/dodfile-syntax
 go 1.23
 
 require (
-	github.com/mitchellh/mapstructure v1.5.0
-	github.com/moby/buildkit v0.18.0
+	github.com/go-viper/mapstructure/v2 v2.2.1
+	github.com/moby/buildkit v0.18.2
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v2 v2.4.0

@@ -3,7 +3,7 @@ package action
 import (
 	"errors"
 
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/moby/buildkit/client/llb"
 	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/wabenet/dodfile-syntax/pkg/action/base"
@@ -19,6 +19,7 @@ import (
 	"github.com/wabenet/dodfile-syntax/pkg/action/rust"
 	"github.com/wabenet/dodfile-syntax/pkg/action/script"
 	"github.com/wabenet/dodfile-syntax/pkg/action/user"
+	"github.com/wabenet/dodfile-syntax/pkg/config"
 )
 
 type Action interface {
@@ -33,15 +34,23 @@ type actionConfig struct {
 	Config map[string]interface{} `mapstructure:",remain"`
 }
 
-func New(name string, config interface{}) (Action, error) {
-	at, ac := decode(name, config)
+func New(name string, cfg interface{}) (Action, error) {
+	at, ac := decode(name, cfg)
 
 	act, err := getByType(at)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := mapstructure.Decode(ac, &act); err != nil {
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Result:     &act,
+		DecodeHook: config.TemplatingDecodeHook(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := decoder.Decode(ac); err != nil {
 		return nil, err
 	}
 
@@ -50,6 +59,7 @@ func New(name string, config interface{}) (Action, error) {
 
 func decode(key string, value interface{}) (string, map[string]interface{}) {
 	ac := actionConfig{}
+
 	if err := mapstructure.Decode(value, &ac); err != nil {
 		return key, map[string]interface{}{
 			"config": value,
