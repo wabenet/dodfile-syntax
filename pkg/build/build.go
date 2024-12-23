@@ -8,7 +8,6 @@ import (
 
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/moby/buildkit/frontend/gateway/client"
 	"github.com/moby/buildkit/util/system"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
@@ -26,10 +25,9 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 
 	st := llb.Image(defaultBaseImage)
 
-	metadata := dockerfile2llb.Image{}
-	metadata.Image = specs.Image{Architecture: runtime.GOARCH, OS: "linux"}
+	metadata := specs.Image{Platform: specs.Platform{Architecture: runtime.GOARCH, OS: "linux"}}
 	metadata.RootFS.Type = "layers"
-	metadata.Config.Env = []string{fmt.Sprintf("PATH=%s", system.DefaultPathEnv)}
+	metadata.Config.Env = []string{fmt.Sprintf("PATH=%s", system.DefaultPathEnv("unix"))}
 
 	for _, a := range img {
 		st, err = a.Execute(st)
@@ -37,10 +35,10 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 			return nil, err
 		}
 
-		a.UpdateImage(&metadata)
+		a.UpdateImage(&metadata.Config)
 	}
 
-	def, err := st.Marshal()
+	def, err := st.Marshal(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal local source: %w", err)
 	}
@@ -85,10 +83,10 @@ func GetConfig(ctx context.Context, c client.Client) (Image, error) {
 		llb.IncludePatterns([]string{filename}),
 		llb.SessionID(c.BuildOpts().SessionID),
 		llb.SharedKeyHint("Dockerfile"),
-		dockerfile2llb.WithInternalName(name),
+		//dockerfile2llb.WithInternalName(name),
 	)
 
-	def, err := src.Marshal()
+	def, err := src.Marshal(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal local source: %w", err)
 	}

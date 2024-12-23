@@ -5,7 +5,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/wabenet/dodfile-syntax/pkg/action/base"
 	cbase "github.com/wabenet/dodfile-syntax/pkg/action/compat/base"
 	ccopy "github.com/wabenet/dodfile-syntax/pkg/action/compat/copy"
@@ -25,7 +25,7 @@ import (
 type Action interface {
 	Type() string
 	Execute(llb.State) (llb.State, error)
-	UpdateImage(*dockerfile2llb.Image)
+	UpdateImage(*oci.ImageConfig)
 }
 
 type actionConfig struct {

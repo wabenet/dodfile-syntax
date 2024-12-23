@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/wabenet/dodfile-syntax/pkg/state"
 )
 
@@ -71,10 +71,10 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	return s.Get(), nil
 }
 
-func (a *Action) UpdateImage(i *dockerfile2llb.Image) {
-	i.Config.User = a.Name
+func (a *Action) UpdateImage(config *oci.ImageConfig) {
+	config.User = a.Name
 
 	if a.Shell != "" {
-		i.Config.Cmd = []string{a.Shell}
+		config.Cmd = []string{a.Shell}
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/moby/buildkit/client/llb"
-	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 const Type = "environment"
@@ -22,8 +22,8 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	return base, nil
 }
 
-func (a *Action) UpdateImage(i *dockerfile2llb.Image) {
-	env := listToMap(i.Config.Env)
+func (a *Action) UpdateImage(config *oci.ImageConfig) {
+	env := listToMap(config.Env)
 
 	for key, value := range a.Variables {
 		switch key {
@@ -34,7 +34,7 @@ func (a *Action) UpdateImage(i *dockerfile2llb.Image) {
 		}
 	}
 
-	i.Config.Env = mapToList(env)
+	config.Env = mapToList(env)
 }
 
 func listToMap(l []string) map[string]string {

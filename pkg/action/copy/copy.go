@@ -4,7 +4,10 @@ import (
 	"context"
 
 	"github.com/moby/buildkit/client/llb"
+	"github.com/moby/buildkit/client/llb/imagemetaresolver"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	"github.com/moby/buildkit/solver/pb"
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/wabenet/dodfile-syntax/pkg/state"
 )
 
@@ -43,11 +46,14 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	}
 
 	buildContext := llb.Local("context")
-	dockerImg, _, err := dockerfile2llb.Dockerfile2LLB(
+	caps := pb.Caps.CapSet(pb.Caps.All())
+	dockerImg, _, _, _, err := dockerfile2llb.Dockerfile2LLB(
 		context.Background(),
 		[]byte(a.Dockerfile),
 		dockerfile2llb.ConvertOpt{
-			BuildContext: &buildContext,
+			MetaResolver: imagemetaresolver.Default(),
+			LLBCaps:      &caps,
+			MainContext:  &buildContext,
 		},
 	)
 	if err != nil {
@@ -60,4 +66,4 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	return s.Get(), nil
 }
 
-func (a *Action) UpdateImage(_ *dockerfile2llb.Image) {}
+func (a *Action) UpdateImage(_ *oci.ImageConfig) {}
