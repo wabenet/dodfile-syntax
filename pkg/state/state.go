@@ -41,6 +41,10 @@ func (s *State) Cwd(dir string) {
 	s.current = s.current.Dir(dir)
 }
 
+func (s *State) Env(key, value string) {
+	s.current = s.current.AddEnv(key, value)
+}
+
 func (s *State) Exec(args ...string) {
 	s.current = s.current.Run(llb.Args(args)).Root()
 }

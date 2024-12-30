@@ -2,6 +2,7 @@ package golang
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/moby/buildkit/client/llb"
@@ -28,7 +29,7 @@ func (a *Action) Type() string {
 	return Type
 }
 
-// TODO: make verify part of the action interface
+// TODO: make verify part of the action interface.
 func (a *Action) Verify() error {
 	if a.Version == "" {
 		a.Version = golangapi.Latest
@@ -50,6 +51,7 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	if err != nil {
 		return build.Get(), err
 	}
+
 	url, err := release.URL()
 	if err != nil {
 		return build.Get(), err
@@ -63,7 +65,7 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 	build.Env("GOPATH", installPath)
 
 	for _, i := range a.Install {
-		build.Exec(fmt.Sprintf("%s/bin/go", installPath), "install", i)
+		build.Exec(path.Join(installPath, "/bin/go"), "install", i)
 	}
 
 	s := state.FromLLB(defaultBaseImage, base)
@@ -82,7 +84,7 @@ func (a *Action) UpdateImage(config *oci.ImageConfig) {
 		}
 	}
 
-	envs = append(envs, fmt.Sprintf("GOPATH=%s", installPath))
+	envs = append(envs, "GOPATH="+installPath)
 
 	config.Env = envs
 }

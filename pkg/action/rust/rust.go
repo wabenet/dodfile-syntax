@@ -2,6 +2,7 @@ package rust
 
 import (
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/moby/buildkit/client/llb"
@@ -30,26 +31,35 @@ func (a *Action) Type() string {
 }
 
 func (a *Action) Execute(base llb.State) (llb.State, error) {
+	s := state.FromLLB(defaultBaseImage, base)
+
+	build, err := a.Build()
+	if err != nil {
+		return s.Get(), err
+	}
+
+	s.Copy(build, installPath, installPath)
+
+	return s.Get(), nil
+}
+
+func (a *Action) Build() (*state.State, error) {
 	build := state.From(defaultBaseImage)
 
 	build.Install("ca-certificates", "curl")
 
-	build.Env("RUSTUP_HOME", fmt.Sprintf("%s/rustup", installPath))
-	build.Env("CARGO_HOME", fmt.Sprintf("%s/cargo", installPath))
+	build.Env("RUSTUP_HOME", RustupHome())
+	build.Env("CARGO_HOME", CargoHome())
 
 	build.Download(rustupURL, rustupFile)
 	build.Exec("/bin/sh", rustupFile, "-y", "--no-modify-path")
 
 	if len(a.Crates) > 0 {
 		build.Install(a.BuildDependencies...)
-		build.Exec(append([]string{fmt.Sprintf("%s/cargo/bin/cargo", installPath), "install"}, a.Crates...)...)
+		CargoInstall(build, a.Crates...)
 	}
 
-	s := state.FromLLB(defaultBaseImage, base)
-
-	s.Copy(build, installPath, installPath)
-
-	return s.Get(), nil
+	return build, nil
 }
 
 func (a *Action) UpdateImage(config *oci.ImageConfig) {
@@ -61,8 +71,20 @@ func (a *Action) UpdateImage(config *oci.ImageConfig) {
 		}
 	}
 
-	envs = append(envs, fmt.Sprintf("RUSTUP_HOME=%s/rustup", installPath))
-	envs = append(envs, fmt.Sprintf("CARGO_HOME=%s/cargo", installPath))
+	envs = append(envs, "RUSTUP_HOME="+RustupHome())
+	envs = append(envs, "CARGO_HOME="+CargoHome())
 
 	config.Env = envs
+}
+
+func CargoInstall(s *state.State, crates ...string) {
+	s.Exec(append([]string{path.Join(installPath, "cargo/bin/cargo"), "install"}, crates...)...)
+}
+
+func RustupHome() string {
+	return path.Join(installPath, "rustup")
+}
+
+func CargoHome() string {
+	return path.Join(installPath, "cargo")
 }

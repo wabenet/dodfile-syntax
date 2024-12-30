@@ -1,19 +1,20 @@
 package golangapi
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"runtime"
+
+	"github.com/wabenet/dodfile-syntax/pkg/simplerest"
 )
 
 const (
 	APIRoot = "https://go.dev/dl"
 	Latest  = "latest"
 )
+
+var ErrNoRelease = errors.New("no valid release found")
 
 type Release struct {
 	Version string `json:"version"`
@@ -32,14 +33,14 @@ type File struct {
 }
 
 func (f File) URL() (string, error) {
-	u, err := url.Parse(APIRoot)
+	getUrl, err := url.Parse(APIRoot)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("invalid API endpoint URL: %s: %w", APIRoot, err)
 	}
 
-	u = u.JoinPath(f.Filename)
+	getUrl = getUrl.JoinPath(f.Filename)
 
-	return u.String(), nil
+	return getUrl.String(), nil
 }
 
 func GetDownload(version string) (File, error) {
@@ -54,27 +55,31 @@ func GetDownload(version string) (File, error) {
 		}
 	}
 
-	return File{}, errors.New("no matching release file found")
+	return File{}, ErrNoRelease
 }
 
 func GetReleaseForVersion(version string) (Release, error) {
-	u, err := url.Parse(APIRoot)
+	var result Release
+
+	getUrl, err := url.Parse(APIRoot)
 	if err != nil {
-		return Release{}, err
+		return result, fmt.Errorf("invalid API endpoint URL: %s: %w", APIRoot, err)
 	}
 
-	u = u.JoinPath("/")
+	getUrl = getUrl.JoinPath("/")
 
-	q := u.Query()
-	q.Set("mode", "json")
+	query := getUrl.Query()
+	query.Set("mode", "json")
+
 	if version != Latest {
-		q.Set("include", "all")
+		query.Set("include", "all")
 	}
-	u.RawQuery = q.Encode()
 
-	releases, err := get[[]Release](u.String())
+	getUrl.RawQuery = query.Encode()
+
+	releases, err := simplerest.Get[[]Release](getUrl.String())
 	if err != nil {
-		return Release{}, err
+		return result, err
 	}
 
 	for _, r := range releases {
@@ -82,36 +87,10 @@ func GetReleaseForVersion(version string) (Release, error) {
 			return r, nil
 		}
 
-		if r.Version == fmt.Sprintf("go%s", version) {
+		if r.Version == "go"+version {
 			return r, nil
 		}
 	}
 
-	return Release{}, errors.New("no matching version found")
-}
-
-func get[T any](url string) (T, error) {
-	var result T
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return result, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("HTTP error %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return result, err
-	}
-
-	if err := json.Unmarshal(body, &result); err != nil {
-		return result, err
-	}
-
-	return result, nil
+	return result, ErrNoRelease
 }

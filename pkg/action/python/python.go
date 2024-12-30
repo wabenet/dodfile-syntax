@@ -68,25 +68,39 @@ func buildDependencies() *state.State {
 }
 
 func (a *Action) Execute(base llb.State) (llb.State, error) {
+	s := state.FromLLB(defaultBaseImage, base)
+
+	build, err := a.Build()
+	if err != nil {
+		return s.Get(), err
+	}
+
+	s.Copy(build, installPath, installPath)
+
+	return s.Get(), nil
+}
+
+func (a *Action) Build() (*state.State, error) {
 	build := buildDependencies()
 	build.Install(a.BuildDependencies...)
 
 	if err := a.Verify(); err != nil {
-		return build.Get(), err
+		return build, err
 	}
 
 	release, err := pythonapi.GetDownload(a.Version, pythonapi.Source)
 	if err != nil {
-		return build.Get(), err
+		return build, fmt.Errorf("no valid download URL found: %w", err)
 	}
 
 	build.Download(release.URL, tarFile)
 
-	signatureFile := fmt.Sprintf("%s.asc", tarFile)
+	signatureFile := tarFile + ".asc"
 	build.Download(release.GPGSignatureFile, signatureFile)
 	build.GPGVerify(tarFile, signatureFile, []string{pythonGPGKey})
 
 	build.CreateDirectory(buildPath)
+
 	switch {
 	case strings.HasSuffix(release.URL, ".tar.xz"):
 		build.Exec("/bin/tar", "-xJf", tarFile, "-C", buildPath, "--strip-components=1")
@@ -126,11 +140,7 @@ find %s -depth \
   \) -exec rm -rf '{}' +
 `, installPath)
 
-	s := state.FromLLB(defaultBaseImage, base)
-
-	s.Copy(build, installPath, installPath)
-
-	return s.Get(), nil
+	return build, nil
 }
 
 func (a *Action) UpdateImage(config *oci.ImageConfig) {

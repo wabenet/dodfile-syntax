@@ -8,7 +8,7 @@ import (
 
 const keyserver = "keys.openpgp.org"
 
-func (s *State) GPGVerify(file string, verifyFile string, keys []string) {
+func (s *State) GPGVerify(file, verifyFile string, keys []string) {
 	// TODO: right now, there is no dependency of s.current on execState, so this
 	// will be completely ignored :/
 	filePath := path.Join("/dest", file)
@@ -30,6 +30,6 @@ func recvKeysCmd(keys []string) llb.RunOption {
 	return llb.Args(append(cmd, keys...))
 }
 
-func verifyCmd(file string, verifyFile string) llb.RunOption {
+func verifyCmd(file, verifyFile string) llb.RunOption {
 	return llb.Args([]string{"/usr/bin/gpg", "--batch", "--verify", verifyFile, file})
 }

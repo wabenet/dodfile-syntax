@@ -1,20 +1,24 @@
 package pythonapi
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"path"
 	"strconv"
+
+	"github.com/wabenet/dodfile-syntax/pkg/simplerest"
 )
 
 const (
 	APIRoot = "https://www.python.org/api/v2"
 	Major   = "3" // We only support Python 3
 	Latest  = "latest"
+)
+
+var (
+	ErrNoRelease       = errors.New("no valid release found")
+	ErrTooManyReleases = errors.New("too many valid releases found")
 )
 
 type OS int
@@ -26,6 +30,7 @@ const (
 	Source
 )
 
+//nolint:tagliatelle
 type Release struct {
 	Name        string `json:"name"`
 	Slug        string `json:"slug"`
@@ -34,9 +39,10 @@ type Release struct {
 	IsLatest    bool   `json:"is_latest"`
 	ReleaseDate string `json:"release_date"`
 	PreRelease  bool   `json:"pre_release"`
-	ResourceUri string `json:"resource_uri"`
+	ResourceURI string `json:"resource_uri"`
 }
 
+//nolint:tagliatelle
 type ReleaseFile struct {
 	Name             string `json:"name"`
 	Slug             string `json:"slug"`
@@ -44,64 +50,72 @@ type ReleaseFile struct {
 	URL              string `json:"url"`
 	GPGSignatureFile string `json:"gpg_signature_file"`
 	MD5Sum           string `json:"md5_sum"`
-	ResourceUri      string `json:"resource_uri"`
+	ResourceURI      string `json:"resource_uri"`
 }
 
 func GetDownload(version string, os OS) (ReleaseFile, error) {
+	var result ReleaseFile
+
 	release, err := GetReleaseForVersion(version)
 	if err != nil {
-		return ReleaseFile{}, err
+		return result, err
 	}
 
-	u, err := url.Parse(release.ResourceUri)
+	getUrl, err := url.Parse(release.ResourceURI)
 	if err != nil {
-		return ReleaseFile{}, err
+		return result, fmt.Errorf("invalid download URL for release: %s: %w", release.ResourceURI, err)
 	}
 
-	releaseID := path.Base(u.Path)
+	releaseID := path.Base(getUrl.Path)
 
-	u, err = url.Parse(APIRoot)
+	getUrl, err = url.Parse(APIRoot)
 	if err != nil {
-		return ReleaseFile{}, err
+		return result, fmt.Errorf("invalid API endpoint URL: %s: %w", APIRoot, err)
 	}
 
-	u = u.JoinPath("downloads", "release_file")
+	getUrl = getUrl.JoinPath("downloads", "release_file")
 
-	q := u.Query()
-	q.Set("release", releaseID)
-	q.Set("os", strconv.Itoa(int(os)))
-	u.RawQuery = q.Encode()
+	query := getUrl.Query()
+	query.Set("release", releaseID)
+	query.Set("os", strconv.Itoa(int(os)))
+	getUrl.RawQuery = query.Encode()
 
-	releaseFiles, err := get[[]ReleaseFile](u.String())
+	releaseFiles, err := simplerest.Get[[]ReleaseFile](getUrl.String())
 	if err != nil {
-		return ReleaseFile{}, err
+		return result, err
 	}
 
 	if len(releaseFiles) < 1 {
-		return ReleaseFile{}, errors.New("no releases")
+		return result, ErrNoRelease
 	}
 
-	return releaseFiles[0], nil
+	result = releaseFiles[0]
+
+	return result, nil
 }
 
 func GetReleaseForVersion(version string) (Release, error) {
-	u, err := url.Parse(APIRoot)
+	var result Release
+
+	getUrl, err := url.Parse(APIRoot)
 	if err != nil {
-		return Release{}, err
+		return result, fmt.Errorf("invalid API endpoint URL: %s: %w", APIRoot, err)
 	}
 
-	u = u.JoinPath("downloads", "release")
+	getUrl = getUrl.JoinPath("downloads", "release")
 
-	q := u.Query()
-	q.Set("version", Major)
+	query := getUrl.Query()
+	query.Set("version", Major)
+
 	if version != Latest {
-		q.Set("name", fmt.Sprintf("Python %s", version))
+		query.Set("name", "Python "+version)
 	}
-	u.RawQuery = q.Encode()
 
-	releases, err := get[[]Release](u.String())
+	getUrl.RawQuery = query.Encode()
+
+	releases, err := simplerest.Get[[]Release](getUrl.String())
 	if err != nil {
-		return Release{}, err
+		return result, err
 	}
 
 	if version == Latest {
@@ -110,37 +124,15 @@ func GetReleaseForVersion(version string) (Release, error) {
 				return r, nil
 			}
 		}
-		return Release{}, errors.New("no latest found")
+
+		return result, ErrNoRelease
 	}
 
 	if len(releases) != 1 {
-		return Release{}, errors.New("too many releases")
+		return result, ErrTooManyReleases
 	}
 
-	return releases[0], nil
-}
-
-func get[T any](url string) (T, error) {
-	var result T
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return result, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return result, err
-	}
-
-	if err := json.Unmarshal(body, &result); err != nil {
-		return result, err
-	}
+	result = releases[0]
 
 	return result, nil
 }
