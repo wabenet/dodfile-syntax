@@ -16,6 +16,7 @@ import (
 	"github.com/wabenet/dodfile-syntax/pkg/action/eget"
 	"github.com/wabenet/dodfile-syntax/pkg/action/env"
 	"github.com/wabenet/dodfile-syntax/pkg/action/fetch"
+	"github.com/wabenet/dodfile-syntax/pkg/action/golang"
 	"github.com/wabenet/dodfile-syntax/pkg/action/install"
 	"github.com/wabenet/dodfile-syntax/pkg/action/python"
 	"github.com/wabenet/dodfile-syntax/pkg/action/script"
@@ -40,6 +41,7 @@ func ParseConfig(input []byte) (Image, error) {
 		fetch.Type:     {},
 		install.Type:   {},
 		python.Type:    {},
+		golang.Type:    {},
 		script.Type:    {},
 		user.Type:      {},
 	}
@@ -69,6 +71,7 @@ func ParseConfig(input []byte) (Image, error) {
 	sorted = append(sorted, actionsByType[ccopy.Type]...)
 	sorted = append(sorted, actionsByType[copy.Type]...)
 	sorted = append(sorted, actionsByType[python.Type]...)
+	sorted = append(sorted, actionsByType[golang.Type]...)
 	sorted = append(sorted, actionsByType[cinstall.Type]...)
 	sorted = append(sorted, actionsByType[install.Type]...)
 	sorted = append(sorted, actionsByType[cscript.Type]...)

@@ -17,6 +17,7 @@ import (
 	"github.com/wabenet/dodfile-syntax/pkg/action/eget"
 	"github.com/wabenet/dodfile-syntax/pkg/action/env"
 	"github.com/wabenet/dodfile-syntax/pkg/action/fetch"
+	"github.com/wabenet/dodfile-syntax/pkg/action/golang"
 	"github.com/wabenet/dodfile-syntax/pkg/action/install"
 	"github.com/wabenet/dodfile-syntax/pkg/action/python"
 	"github.com/wabenet/dodfile-syntax/pkg/action/script"
@@ -93,6 +94,8 @@ func getByType(t string) (Action, error) {
 		return &env.Action{}, nil
 	case fetch.Type:
 		return &fetch.Action{}, nil
+	case golang.Type:
+		return &golang.Action{}, nil
 	case install.Type:
 		return &install.Action{}, nil
 	case python.Type:

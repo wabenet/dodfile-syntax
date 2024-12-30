@@ -6,6 +6,10 @@ import (
 	"github.com/moby/buildkit/client/llb"
 )
 
+func (s *State) Env(key string, value string) {
+	s.current = s.current.AddEnv(key, value)
+}
+
 func (s *State) CreateDirectory(path string) {
 	s.Exec("/bin/mkdir", "-p", path)
 }
