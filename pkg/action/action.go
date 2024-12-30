@@ -20,6 +20,7 @@ import (
 	"github.com/wabenet/dodfile-syntax/pkg/action/golang"
 	"github.com/wabenet/dodfile-syntax/pkg/action/install"
 	"github.com/wabenet/dodfile-syntax/pkg/action/python"
+	"github.com/wabenet/dodfile-syntax/pkg/action/rust"
 	"github.com/wabenet/dodfile-syntax/pkg/action/script"
 	"github.com/wabenet/dodfile-syntax/pkg/action/user"
 )
@@ -100,6 +101,8 @@ func getByType(t string) (Action, error) {
 		return &install.Action{}, nil
 	case python.Type:
 		return &python.Action{}, nil
+	case rust.Type:
+		return &rust.Action{}, nil
 	case script.Type:
 		return &script.Action{}, nil
 	case user.Type:
