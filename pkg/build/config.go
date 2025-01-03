@@ -20,6 +20,7 @@ import (
 	"github.com/wabenet/dodfile-syntax/pkg/action/install"
 	"github.com/wabenet/dodfile-syntax/pkg/action/nodejs"
 	"github.com/wabenet/dodfile-syntax/pkg/action/python"
+	"github.com/wabenet/dodfile-syntax/pkg/action/ruby"
 	"github.com/wabenet/dodfile-syntax/pkg/action/rust"
 	"github.com/wabenet/dodfile-syntax/pkg/action/script"
 	"github.com/wabenet/dodfile-syntax/pkg/action/user"
@@ -43,6 +44,7 @@ func ParseConfig(input []byte) (Image, error) {
 		fetch.Type:     {},
 		install.Type:   {},
 		python.Type:    {},
+		ruby.Type:      {},
 		nodejs.Type:    {},
 		golang.Type:    {},
 		rust.Type:      {},
@@ -75,6 +77,7 @@ func ParseConfig(input []byte) (Image, error) {
 	sorted = append(sorted, actionsByType[ccopy.Type]...)
 	sorted = append(sorted, actionsByType[copy.Type]...)
 	sorted = append(sorted, actionsByType[python.Type]...)
+	sorted = append(sorted, actionsByType[ruby.Type]...)
 	sorted = append(sorted, actionsByType[nodejs.Type]...)
 	sorted = append(sorted, actionsByType[golang.Type]...)
 	sorted = append(sorted, actionsByType[rust.Type]...)
