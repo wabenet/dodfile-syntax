@@ -75,7 +75,7 @@ func MagicArchMap() map[string]*regexp.Regexp {
 		"amd64":   regexp.MustCompile(`(?i)(x64|amd64|x86(-|_)?64)`),
 		"386":     regexp.MustCompile(`(?i)(x32|amd32|x86(-|_)?32|i?386)`),
 		"arm":     regexp.MustCompile(`(?i)(arm32|armv6|arm\b)`),
-		"arm64":   regexp.MustCompile(`(?i)(arm64|armv8|aarch64|arm)`),
+		"arm64":   regexp.MustCompile(`(?i)(arm64|armv8|aarch(-|_)?64|arm)`),
 		"riscv64": regexp.MustCompile(`(?i)(riscv64)`),
 	}
 }
