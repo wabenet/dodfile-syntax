@@ -64,7 +64,6 @@ func ParseConfig(input []byte) (Image, error) {
 	// as before
 	sorted := []action.Action{}
 	sorted = append(sorted, actionsByType[base.Type]...)
-	sorted = append(sorted, actionsByType[env.Type]...)
 	sorted = append(sorted, actionsByType[user.Type]...)
 	sorted = append(sorted, actionsByType[fetch.Type]...)
 	sorted = append(sorted, actionsByType[eget.Type]...)
@@ -74,6 +73,7 @@ func ParseConfig(input []byte) (Image, error) {
 	sorted = append(sorted, actionsByType[nodejs.Type]...)
 	sorted = append(sorted, actionsByType[golang.Type]...)
 	sorted = append(sorted, actionsByType[rust.Type]...)
+	sorted = append(sorted, actionsByType[env.Type]...)
 	sorted = append(sorted, actionsByType[install.Type]...)
 	sorted = append(sorted, actionsByType[script.Type]...)
 
