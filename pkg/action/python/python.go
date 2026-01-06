@@ -95,9 +95,11 @@ func (a *Action) Build() (*state.State, error) {
 
 	build.Download(release.URL, tarFile)
 
-	signatureFile := tarFile + ".asc"
-	build.Download(release.GPGSignatureFile, signatureFile)
-	build.GPGVerify(tarFile, signatureFile, []string{pythonGPGKey})
+	if len(release.GPGSignatureFile) > 0 {
+		signatureFile := tarFile + ".asc"
+		build.Download(release.GPGSignatureFile, signatureFile)
+		build.GPGVerify(tarFile, signatureFile, []string{pythonGPGKey})
+	}
 
 	build.CreateDirectory(buildPath)
 
@@ -130,15 +132,6 @@ func (a *Action) Build() (*state.State, error) {
 	if len(a.PipPackages) > 0 {
 		build.Sh("%s/bin/pip3 install %s", installPath, strings.Join(a.PipPackages, " "))
 	}
-
-	build.Sh(`
-find %s -depth \
-  \( \
-    \( -type d -a \( -name test -o -name tests \) \) \
-    -o \
-    \( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
-  \) -exec rm -rf '{}' +
-`, installPath)
 
 	return build, nil
 }
