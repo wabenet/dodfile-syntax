@@ -140,7 +140,7 @@ func (a *Action) UpdateImage(config *oci.ImageConfig) {
 
 func validGPGKeys() []string {
 	return []string{
-		"C0D6248439F1D5604AAFFB4021D900FFDB233756", // Antoine du Hamel
+		"5BE8A3F6C8A5C01D106C0AD820B1A390B168D356", // Antoine du Hamel
 		"DD792F5973C6DE52C432CBDAC77ABFA00DDBF2B7", // Juan José Arboleda
 		"CC68F5A3106FF448322E48ED27F5E38D5B0A215F", // Marco Ippolito
 		"8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600", // Michaël Zasso
