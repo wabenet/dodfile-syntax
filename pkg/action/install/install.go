@@ -1,6 +1,8 @@
 package install
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -17,9 +19,10 @@ const (
 )
 
 type Action struct {
-	Name string `mapstructure:"name"`
-	Repo string `mapstructure:"repo"`
-	Gpg  string `mapstructure:"gpg"`
+	Name    string `mapstructure:"name"`
+	Repo    string `mapstructure:"repo"`
+	Gpg     string `mapstructure:"gpg"`
+	Release string `mapstructure:"release"`
 }
 
 func (a *Action) Type() string {
@@ -39,9 +42,13 @@ func (a *Action) Execute(base llb.State) (llb.State, error) {
 			curl.Install("apt-transport-https", "curl", "ca-certificates")
 			curl.Exec("/usr/bin/curl", "-Lo", "/key.gpg", a.Gpg)
 			s.CreateDirectory(keyringsDir)
-			s.Copy(curl, "/key.gpg", fmt.Sprintf("%s/%s.gpg", keyringsDir, a.Name))
 
-			s.Sh("echo \"deb [signed-by=%s/%s.gpg] %s any main\" >> /etc/apt/sources.list", keyringsDir, a.Name, a.Repo)
+			hasher := md5.New()
+			hasher.Write([]byte(a.Repo))
+			gpgFile := fmt.Sprintf("%s/%s.gpg", keyringsDir, hex.EncodeToString(hasher.Sum(nil)))
+
+			s.Copy(curl, "/key.gpg", gpgFile)
+			s.Sh("echo \"deb [signed-by=%s] %s %s main\" >> /etc/apt/sources.list", gpgFile, a.Repo, a.Release)
 		} else {
 			s.Sh("echo \"deb %s trixie main\" >> /etc/apt/sources.list", a.Repo)
 		}
